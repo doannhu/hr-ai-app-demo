@@ -10,12 +10,12 @@ import { fetchCandidates } from '../api';
 const CandidateCard = ({ candidate }) => {
   const [expanded, setExpanded] = useState(false);
 
-  // Calculate a simple average score across all answers if scores exist
+  // Calculate total score across all answers if scores exist
   const scores = candidate.answers
     .map((ans) => ans.evaluation_score)
     .filter((score) => typeof score === 'number');
-  const averageScore = scores.length > 0 ? (
-    scores.reduce((sum, s) => sum + s, 0) / scores.length
+  const totalScore = scores.length > 0 ? (
+    scores.reduce((sum, s) => sum + s, 0)
   ).toFixed(1) : null;
 
   return (
@@ -25,7 +25,7 @@ const CandidateCard = ({ candidate }) => {
           <h3>{candidate.name}</h3>
           <p className="subtext">{candidate.phone}</p>
         </div>
-        {averageScore && <span className="score-chip">Avg: {averageScore}</span>}
+        {totalScore && <span className="score-chip">Total: {totalScore}</span>}
       </div>
       {expanded && (
         <div className="card-body">
@@ -68,7 +68,23 @@ const EmployerDashboard = () => {
     async function loadCandidates() {
       try {
         const data = await fetchCandidates(token);
-        setCandidates(data);
+        
+        // Sort candidates by total score (high to low)
+        const sortedCandidates = data.sort((a, b) => {
+          const getTotalScore = (candidate) => {
+            const scores = candidate.answers
+              .map((ans) => ans.evaluation_score)
+              .filter((score) => typeof score === 'number');
+            return scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) : 0;
+          };
+          
+          const scoreA = getTotalScore(a);
+          const scoreB = getTotalScore(b);
+          
+          return scoreB - scoreA; // Descending order (high to low)
+        });
+        
+        setCandidates(sortedCandidates);
       } catch (err) {
         setError('Không thể tải danh sách ứng viên.');
       } finally {
