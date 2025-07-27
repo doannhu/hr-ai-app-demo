@@ -1,26 +1,33 @@
 # HR AI App - AI-Powered Candidate Evaluation System
 
-A modern web application that combines AI-powered candidate evaluation with a clean, responsive user interface. This system helps employers assess job candidates through automated evaluation of their responses to interview questions.
+A modern web application that combines AI-powered candidate evaluation with a clean, responsive user interface. This system helps employers assess job candidates through automated evaluation of their responses to interview questions using advanced AI technology and ideal answer comparison.
 
 ## 🚀 Features
 
 ### For Candidates
-- **Modern Application Form** - Clean, responsive interface for job applications
+- **Welcome Page** - Beautiful landing page with clear paths for candidates and employers
+- **Modern Application Form** - Clean, iOS-style interface for job applications
 - **Multiple Question Types** - Support for both multiple choice and text-based questions
 - **Real-time Validation** - Immediate feedback on form inputs
-- **AI Evaluation** - Automated scoring and feedback on responses
+- **Instant Submission** - Immediate response with background AI evaluation
+- **Progress Tracking** - Real-time status updates during evaluation
+- **Beautiful Thank You Page** - Professional completion experience with blur background
 
 ### For Employers
 - **Secure Dashboard** - Protected access to candidate submissions
 - **AI-Generated Insights** - Automated evaluation scores and detailed feedback
 - **Modern UI** - Clean, professional interface for reviewing candidates
 - **Comprehensive View** - See all candidate responses with AI analysis
+- **Total Score Ranking** - Candidates sorted by total score (high to low)
+- **Detailed Evaluations** - Individual question scores and feedback
 
 ### Technical Features
 - **FastAPI Backend** - High-performance Python API with automatic documentation
 - **React Frontend** - Modern, responsive single-page application
 - **SQLite Database** - Lightweight, file-based database for data persistence
-- **OpenAI Integration** - AI-powered candidate evaluation using GPT models
+- **OpenAI Integration** - AI-powered candidate evaluation using GPT-4
+- **Async Background Processing** - Non-blocking evaluation for better UX
+- **Ideal Answer Comparison** - Structured evaluation with predefined ideal answers
 - **CORS Support** - Cross-origin resource sharing for frontend-backend communication
 
 ## 📁 Project Structure
@@ -32,25 +39,29 @@ hr-ai-app/
 │   ├── .gitignore
 │   ├── README.md
 │   ├── requirements.txt         # Python dependencies
-│   ├── main.py                 # FastAPI app with CORS
-│   ├── models.py               # SQLAlchemy models
-│   ├── schemas.py              # Pydantic schemas
+│   ├── main.py                 # FastAPI app with CORS and async endpoints
+│   ├── models.py               # SQLAlchemy models with evaluation status
+│   ├── schemas.py              # Pydantic schemas with new response models
 │   ├── database.py             # Database configuration
-│   └── evaluation.py           # AI evaluation logic
+│   ├── evaluation.py           # AI evaluation logic with structured output
+│   ├── background_tasks.py     # Async background processing
+│   └── ideal_answers.py        # Predefined ideal answers for evaluation
 └── ai_app_frontend/            # React frontend
     ├── package.json            # Node.js dependencies
     ├── package-lock.json
     ├── public/
     │   └── index.html
     └── src/
-        ├── App.js              # Main React app
-        ├── api.js              # API functions
-        ├── index.css           # Modern styling
+        ├── App.js              # Main React app with routing
+        ├── api.js              # API functions with status checking
+        ├── index.css           # Modern iOS-style styling
         ├── index.js
+        ├── questionBank.js     # Centralized question management
         └── components/
-            ├── CandidateForm.js    # Modern form UI
+            ├── Welcome.js          # Landing page with two cards
+            ├── CandidateForm.js    # Modern form with async submission
             ├── EmployerLogin.js    # Clean login UI
-            └── EmployerDashboard.js # Modern dashboard UI
+            └── EmployerDashboard.js # Modern dashboard with sorting
 ```
 
 ## 🛠️ Installation & Setup
@@ -111,17 +122,22 @@ hr-ai-app/
 ## 📖 Usage
 
 ### For Candidates
-1. Visit `http://localhost:3000`
-2. Fill out the application form with your name and phone number
-3. Answer the multiple choice questions (20 questions)
-4. Provide detailed responses to text-based questions (15 questions)
-5. Submit your application
+1. Visit `http://localhost:3000` - Welcome page with two options
+2. Click "Bắt đầu ứng tuyển" to start application
+3. Fill out the application form with your name and phone number
+4. Answer the multiple choice questions (10 questions)
+5. Provide detailed responses to text-based questions (6 questions)
+6. Submit your application - **Get immediate confirmation!**
+7. View real-time evaluation progress (optional)
+8. See beautiful thank you page with completion message
 
 ### For Employers
-1. Visit `http://localhost:3000/employer`
-2. Login with credentials (default: admin/password)
-3. View the dashboard at `http://localhost:3000/dashboard`
-4. Review candidate submissions with AI-generated scores and feedback
+1. Visit `http://localhost:3000` - Welcome page
+2. Click "Đăng nhập" for employer access
+3. Login with credentials (default: admin/password)
+4. View the dashboard with all candidate submissions
+5. See candidates ranked by total score (highest first)
+6. Review detailed AI-generated scores and feedback for each answer
 
 ## 🔧 Configuration
 
@@ -137,32 +153,66 @@ EMPLOYER_TOKEN=your_custom_token_here
 
 ### API Endpoints
 
-- `POST /candidates` - Submit candidate application
+- `POST /candidates` - Submit candidate application (immediate response)
+- `GET /candidates/{id}/status` - Check evaluation status
 - `POST /employer/login` - Employer authentication
 - `GET /candidates` - Retrieve all candidate submissions (requires auth)
 
 ## 🎨 UI Features
 
-### Modern Design
-- **Card-based Layout** - Clean, organized presentation
-- **Responsive Design** - Works on desktop, tablet, and mobile
-- **Smooth Animations** - Subtle transitions and hover effects
+### Modern iOS-Style Design
+- **Welcome Page** - Beautiful gradient background with two interactive cards
+- **Card-based Layout** - Clean, organized presentation with subtle shadows
+- **iOS-style Form Elements** - Custom radio buttons, rounded corners, smooth animations
+- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+- **Smooth Animations** - Slide-in effects, hover animations, and transitions
 - **Professional Color Scheme** - Blue-based theme with proper contrast
+- **Blur Background Effects** - Modern glassmorphism design elements
 
-### User Experience
+### Enhanced User Experience
+- **Immediate Response** - No more waiting 30 seconds for submission
+- **Real-time Status Updates** - Background processing with progress tracking
 - **Intuitive Navigation** - Clear paths for candidates and employers
 - **Real-time Feedback** - Immediate validation and error messages
 - **Loading States** - Visual feedback during API calls
 - **Accessibility** - Proper labels, focus states, and keyboard navigation
+- **Thank You Page** - Beautiful completion experience with blur overlay
 
-## 🤖 AI Evaluation
+## 🤖 AI Evaluation System
 
-The system uses OpenAI's GPT models to evaluate candidate responses:
-
-- **Multiple Choice Questions** - Automatic scoring based on correct answers
-- **Text Responses** - AI-generated scores (0-2 scale) with detailed feedback
+### Advanced Evaluation Features
+- **Structured Output** - Consistent JSON responses with scores and feedback
+- **Ideal Answer Comparison** - Predefined ideal answers for accurate evaluation
+- **GPT-4 Integration** - Latest AI model for superior evaluation quality
+- **0-2 Scoring Scale** - Detailed scoring for text responses
 - **Vietnamese Language Support** - Optimized for Vietnamese responses
 - **Professional Assessment** - Evaluates relevance, completeness, and professionalism
+
+### Evaluation Process
+1. **Immediate Submission** - Candidate gets instant confirmation
+2. **Background Processing** - AI evaluation runs in separate thread
+3. **Status Tracking** - Real-time updates on evaluation progress
+4. **Quality Results** - Structured feedback with scores and detailed comments
+
+### Question Types
+- **Multiple Choice (10 questions)** - Automatic scoring based on correct answers
+- **Text Responses (6 questions)** - AI-generated scores with ideal answer comparison
+- **Comprehensive Coverage** - Sales, customer service, and professional scenarios
+
+## ⚡ Performance & Scalability
+
+### Async Background Processing
+- **Non-blocking Submissions** - Immediate response to users
+- **Background Evaluation** - AI processing doesn't block the main thread
+- **Scalable Architecture** - Can handle multiple simultaneous submissions
+- **Status Tracking** - Real-time progress monitoring
+- **Error Handling** - Robust error management and recovery
+
+### Database Features
+- **Evaluation Status Tracking** - Monitor processing state
+- **Ideal Answer Storage** - Predefined answers for comparison
+- **Comprehensive Data Model** - Complete candidate and answer tracking
+- **Efficient Queries** - Optimized for dashboard performance
 
 ## 🛡️ Security
 
@@ -170,6 +220,7 @@ The system uses OpenAI's GPT models to evaluate candidate responses:
 - **Input Validation** - Server-side validation of all inputs
 - **CORS Configuration** - Proper cross-origin request handling
 - **Environment Variables** - Secure API key management
+- **Background Processing** - Secure thread management
 
 ## 🚀 Deployment
 
@@ -207,4 +258,4 @@ For support and questions:
 
 ---
 
-**Built with ❤️ using FastAPI, React, and OpenAI** 
+**Built with ❤️ using FastAPI, React, OpenAI GPT-4, and modern async processing** 
