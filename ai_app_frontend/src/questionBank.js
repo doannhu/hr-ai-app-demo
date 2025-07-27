@@ -103,19 +103,10 @@ export const MULTIPLE_CHOICE_QUESTIONS = [
 // Short answer questions from the attached guide.  These questions are open‑ended
 // and allow the candidate to describe their experience and mindset in detail.
 export const SHORT_ANSWER_QUESTIONS = [
-  { id: 21, question: 'Theo bạn, điều gì làm nên một nhân viên bán hàng tốt?' },
-  { id: 22, question: 'Hãy mô tả một tình huống bạn xử lý tốt một khách khó tính.' },
-  { id: 23, question: 'Nếu được nhận, bạn sẽ làm gì trong tuần đầu tiên để học việc nhanh nhất?' },
-  { id: 24, question: 'Nếu khách trẻ tuổi muốn mua quà cho mẹ, bạn sẽ tư vấn như thế nào?' },
-  { id: 25, question: 'Khi khách không chọn được mẫu nào, bạn thường xử lý ra sao?' },
-  { id: 26, question: 'Bạn nghĩ đâu là thời điểm nhạy cảm nhất khi tư vấn khách hàng?' },
-  { id: 27, question: 'Bạn từng mắc lỗi nào trong lúc làm việc trước đây chưa? Học được gì?' },
-  { id: 28, question: 'Theo bạn, nên ưu tiên khách nào khi có đông người vào cùng lúc?' },
-  { id: 29, question: 'Bạn thích làm việc độc lập hay theo nhóm? Vì sao?' },
-  { id: 30, question: 'Khi có mẫu mới về, bạn sẽ giới thiệu với khách thế nào?' },
-  { id: 31, question: 'Nếu một sản phẩm có giá 300k nhưng khách chỉ có 250k, bạn sẽ?' },
-  { id: 32, question: 'Bạn nghĩ mình phù hợp nhất với công việc này ở điểm nào?' },
-  { id: 33, question: 'Nếu một ngày bị khiển trách, bạn sẽ phản ứng ra sao?' },
-  { id: 34, question: 'Khi khách không thích cách livestream của bạn, bạn sẽ điều chỉnh như thế nào?' },
-  { id: 35, question: 'Một ngày bán được ít hàng, bạn sẽ cảm thấy thế nào?' },
+  { id: 11, question: 'Theo bạn, điều gì làm nên một nhân viên bán hàng tốt?' },
+  { id: 12, question: 'Hãy mô tả một tình huống bạn xử lý tốt một khách khó tính.' },
+  { id: 13, question: 'Nếu được nhận, bạn sẽ làm gì trong tuần đầu tiên để học việc nhanh nhất?' },
+  { id: 14, question: 'Nếu một sản phẩm có giá 300k nhưng khách chỉ có 250k, bạn sẽ?' },
+  { id: 15, question: 'Nếu một ngày bị khiển trách, bạn sẽ phản ứng ra sao?' },
+  { id: 16, question: 'Một ngày bán được ít hàng, bạn sẽ cảm thấy thế nào?' },
 ]; 

@@ -26,22 +26,12 @@ MC_ANSWER_KEYS: Dict[int, str] = {
     2: 'B',
     3: 'B',
     4: 'B',
-    5: 'B',
+    5: 'C',
     6: 'B',
-    7: 'A',
+    7: 'B',
     8: 'B',
     9: 'A',
-    10: 'B',
-    11: 'A',
-    12: 'B',
-    13: 'C',
-    14: 'A',
-    15: 'B',
-    16: 'B',
-    17: 'B',
-    18: 'A',
-    19: 'A',
-    20: 'A',
+    10: 'A',
 }
 
 
@@ -80,7 +70,7 @@ def evaluate_short_answer(question: str, answer: str, chat: ChatOpenAI) -> Tuple
     system_prompt = (
         "Bạn là trợ lý nhân sự đánh giá câu trả lời phỏng vấn. "
         "Chấm điểm câu trả lời của ứng viên từ 0 đến 2 dựa trên mức độ đầy đủ, phù hợp "
-        "và thái độ chuyên nghiệp."
+        "và thái độ chuyên nghiệp cho vị trí chăm sóc khách hàng và bán hàng tại cửa hàng trang sức vàng bạc."
     )
     user_prompt = (
         f"Câu hỏi: {question}\n"
