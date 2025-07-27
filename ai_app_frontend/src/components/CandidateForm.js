@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { submitCandidate } from '../api';
+import { submitCandidate, getEvaluationStatus } from '../api';
 import { MULTIPLE_CHOICE_QUESTIONS, SHORT_ANSWER_QUESTIONS } from '../questionBank';
 
 /**
@@ -23,6 +23,8 @@ const CandidateForm = () => {
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState(null);
+  const [evaluationStatus, setEvaluationStatus] = useState('pending');
   const [error, setError] = useState(null);
 
   // Handle change for multiple choice answers
@@ -71,7 +73,8 @@ const CandidateForm = () => {
           })),
         ],
       };
-      await submitCandidate(payload);
+      const response = await submitCandidate(payload);
+      setSubmissionId(response.id);
       setSubmitted(true);
       // Optionally reset form after submission
       setName('');
@@ -86,14 +89,45 @@ const CandidateForm = () => {
     }
   };
 
+  // Check evaluation status periodically
+  useEffect(() => {
+    if (!submissionId || evaluationStatus === 'completed' || evaluationStatus === 'failed') {
+      return;
+    }
+
+    const checkStatus = async () => {
+      try {
+        const statusResponse = await getEvaluationStatus(submissionId);
+        setEvaluationStatus(statusResponse.status);
+      } catch (err) {
+        console.error('Error checking status:', err);
+      }
+    };
+
+    const interval = setInterval(checkStatus, 2000); // Check every 2 seconds
+    return () => clearInterval(interval);
+  }, [submissionId, evaluationStatus]);
+
   if (submitted) {
     return (
-      <div className="form-container">
-        <h1>Cảm ơn!</h1>
-        <p>Đơn ứng tuyển của bạn đã được gửi thành công.</p>
-        <button className="primary" onClick={() => setSubmitted(false)}>
-          Gửi đơn khác
-        </button>
+      <div className="thank-you-overlay">
+        <div className="thank-you-card">
+          <div className="thank-you-icon">💛</div>
+          <h1>Vàng & Bạc Hoa Tùng</h1>
+          <p className="thank-you-message">
+            Vàng & Bạc Hoa Tùng xin gửi lời cảm ơn chân thành đến các bạn ứng viên đã quan tâm và dành thời gian đến dự tuyển tại cửa hàng 💛
+            <br /><br />
+            Chúc các bạn luôn giữ vững đam mê, tiếp tục phát triển bản thân, và dù kết quả ra sao 💫 Một lần nữa, cảm ơn và hẹn gặp lại!
+          </p>
+          {evaluationStatus !== 'completed' && evaluationStatus !== 'failed' && (
+            <div className="evaluation-status">
+              <p>Trạng thái đánh giá: {evaluationStatus === 'pending' ? 'Đang chờ...' : 'Đang xử lý...'}</p>
+            </div>
+          )}
+          <button className="thank-you-button" onClick={() => setSubmitted(false)}>
+            Hoàn thành
+          </button>
+        </div>
       </div>
     );
   }

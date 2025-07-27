@@ -28,6 +28,25 @@ export async function submitCandidate(payload) {
 }
 
 /**
+ * Get evaluation status for a candidate submission.
+ *
+ * @param {number} candidateId
+ */
+export async function getEvaluationStatus(candidateId) {
+  const response = await fetch(`${API_BASE_URL}/candidates/${candidateId}/status`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Failed to get evaluation status');
+  }
+  return response.json();
+}
+
+/**
  * Authenticate an employer using a username and password.  Returns a token
  * which should be stored by the client for subsequent authenticated calls.
  *

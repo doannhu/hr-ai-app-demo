@@ -14,6 +14,10 @@ from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+from langchain.schema.runnable import RunnableMap
 
 # Load environment variables from .env file
 load_dotenv()
@@ -49,13 +53,14 @@ def evaluate_multiple_choice(question_id: int, selected: str) -> Tuple[float, st
 def get_chat_model() -> ChatOpenAI:
     """Initialize and return a ChatOpenAI model using the environment API key."""
     # This will raise if the API key is not set
+    model_name = "gpt-4o"
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         raise RuntimeError(
             'OPENAI_API_KEY environment variable is not set. Please set your OpenAI API key.'
         )
     # Instantiate the chat model.  temperature=0 yields deterministic outputs.
-    return ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.0)
+    return ChatOpenAI(model_name=model_name, temperature=0)
 
 
 def evaluate_short_answer(question: str, answer: str, chat: ChatOpenAI) -> Tuple[float, str]:
@@ -75,7 +80,7 @@ def evaluate_short_answer(question: str, answer: str, chat: ChatOpenAI) -> Tuple
     user_prompt = (
         f"Câu hỏi: {question}\n"
         f"Câu trả lời của ứng viên: {answer}\n"
-        "Hãy trả về kết quả ở dạng JSON với hai trường 'score' (một số nguyên 0–2) và 'feedback' (một câu nhận xét ngắn)."
+        "Hãy trả về kết quả ở dạng JSON với hai trường 'score' (một số nguyên 0–2) và 'feedback' (hai câu nhận xét ngắn)."
     )
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
     response = chat.invoke(messages)
@@ -94,6 +99,55 @@ def evaluate_short_answer(question: str, answer: str, chat: ChatOpenAI) -> Tuple
         return score, feedback
 
 
+# Step 1: Define schema
+schema = [
+    ResponseSchema(name="score", description="Score between 0 and 2"),
+    ResponseSchema(name="feedback", description="Short feedback on the answer"),
+]
+parser = StructuredOutputParser.from_response_schemas(schema)
+
+# Step 2: Create prompt
+prompt = PromptTemplate(
+    input_variables=["question", "ideal_answer", "candidate_answer"],
+    template="""
+        Bạn là một trợ lý nhân sự chuyên đánh giá câu trả lời phỏng vấn cho vị trí chăm sóc khách hàng tại cửa hàng trang sức bạc.
+
+        Câu hỏi: {question}
+
+        Câu trả lời mẫu (tốt nhất): {ideal_answer}
+
+        Câu trả lời của ứng viên: {candidate_answer}
+
+        Hãy chấm điểm câu trả lời của ứng viên từ 0 đến 2, dựa trên mức độ phù hợp, đầy đủ và chuyên nghiệp.  
+        Sau đó, đưa ra **nhận xét ngắn gọn bằng tiếng Việt** giúp ứng viên hiểu mình đã làm tốt gì và cần cải thiện gì.
+
+        Phản hồi của bạn phải đúng định dạng JSON sau:
+        {format_instructions}
+    """,
+    partial_variables={"format_instructions": parser.get_format_instructions()}
+)
+
+# Step 3: Define the model
+llm = ChatOpenAI(model="gpt-4", temperature=0)
+
+# Step 4: Create a chain using the Runnable interface
+chain = (
+    {"question": lambda x: x["question"],
+     "ideal_answer": lambda x: x["ideal_answer"],
+     "candidate_answer": lambda x: x["candidate_answer"]}
+    | prompt
+    | llm
+    | parser
+)
+
+# Step 5: Use `.invoke()` instead of `.run()`
+def evaluate_answer(question: str, ideal_answer: str, candidate_answer: str):
+    return chain.invoke({
+        "question": question,
+        "ideal_answer": ideal_answer,
+        "candidate_answer": candidate_answer
+    })
+
 def evaluate_candidate_answers(answers: List[dict]) -> List[dict]:
     """
     Given a list of answer dicts from the API request, compute evaluation results.
@@ -108,20 +162,42 @@ def evaluate_candidate_answers(answers: List[dict]) -> List[dict]:
     Returns a list of evaluation results with fields 'score' and 'feedback'.
     """
     results: List[dict] = []
-    chat_model = None
+    
+    # Import ideal answers
+    from ideal_answers import ideal_answers
+    
     for ans in answers:
         qid = ans.get('id')
         qtype = ans.get('type')
+        
         if qtype == 'mc':
             selected = ans.get('selected') or ''
             score, feedback = evaluate_multiple_choice(qid, selected)
         elif qtype == 'text':
-            # Lazy initialize the chat model to avoid creating it unnecessarily
-            if chat_model is None:
-                chat_model = get_chat_model()
             answer_text = ans.get('answer') or ''
-            score, feedback = evaluate_short_answer(ans.get('question', ''), answer_text, chat_model)
+            question_text = ans.get('question', '')
+            
+            # Get ideal answer if available
+            ideal_answer = ""
+            if qid in ideal_answers:
+                ideal_answer = ideal_answers[qid]['ideal_answer']
+            
+            # Use new structured evaluation with ideal answer
+            if ideal_answer:
+                try:
+                    evaluation_result = evaluate_answer(question_text, ideal_answer, answer_text)
+                    score = evaluation_result['score']
+                    feedback = evaluation_result['feedback']
+                except Exception as e:
+                    # Fallback to old method if structured evaluation fails
+                    chat_model = get_chat_model()
+                    score, feedback = evaluate_short_answer(question_text, answer_text, chat_model)
+            else:
+                # Fallback to old method if no ideal answer available
+                chat_model = get_chat_model()
+                score, feedback = evaluate_short_answer(question_text, answer_text, chat_model)
         else:
             score, feedback = 0.0, "Unknown question type"
+            
         results.append({'score': score, 'feedback': feedback})
     return results

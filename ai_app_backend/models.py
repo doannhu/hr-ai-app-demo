@@ -21,6 +21,7 @@ class Candidate(Base):
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    evaluation_status = Column(String, default='pending')  # pending, processing, completed, failed
 
     # One-to-many relationship to answers
     answers = relationship(
@@ -48,6 +49,12 @@ class Answer(Base):
     # Evaluation fields.  Populated after running the AI evaluator.
     evaluation_score = Column(Float, nullable=True)
     evaluation_feedback = Column(String, nullable=True)
+    
+    # Ideal answer for comparison (for text questions)
+    ideal_answer = Column(String, nullable=True)
+    
+    # Evaluation status tracking
+    evaluation_status = Column(String, default='pending')  # pending, processing, completed, failed
 
     # Relationship back to candidate
     candidate = relationship("Candidate", back_populates="answers")

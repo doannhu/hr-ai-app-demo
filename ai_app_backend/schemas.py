@@ -36,6 +36,8 @@ class AnswerOut(BaseModel):
     answer_text: Optional[str] = None
     evaluation_score: Optional[float] = None
     evaluation_feedback: Optional[str] = None
+    ideal_answer: Optional[str] = None
+    evaluation_status: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -48,7 +50,16 @@ class CandidateOut(BaseModel):
     name: str
     phone: str
     created_at: datetime
+    evaluation_status: str
     answers: List[AnswerOut]
 
     class Config:
         from_attributes = True
+
+
+class SubmissionResponse(BaseModel):
+    """Schema for immediate submission response."""
+    
+    id: int
+    message: str
+    status: str

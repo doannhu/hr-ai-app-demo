@@ -26,6 +26,8 @@ from sqlalchemy.orm import Session
 load_dotenv()
 
 import models, schemas, database, evaluation
+from ideal_answers import ideal_answers
+import background_tasks
 
 
 # Create database tables on application startup
@@ -59,28 +61,28 @@ def get_db():
         db.close()
 
 
-@app.post("/candidates", status_code=status.HTTP_201_CREATED)
+@app.post("/candidates", status_code=status.HTTP_202_ACCEPTED, response_model=schemas.SubmissionResponse)
 def create_candidate(candidate: schemas.CandidateCreate, db: Session = Depends(get_db)):
     """
-    Create a new candidate submission.
-
-    The request body should include the candidate's name, phone number and a list
-    of answers (multiple choice or text).  After storing the submission, the
-    answers are evaluated using the AI evaluator.
+    Create a new candidate submission with immediate response.
+    
+    The submission is saved immediately and evaluation is processed in the background.
+    Returns submission ID and status immediately.
     """
     # Create candidate record
-    cand = models.Candidate(name=candidate.name, phone=candidate.phone)
+    cand = models.Candidate(name=candidate.name, phone=candidate.phone, evaluation_status='pending')
     db.add(cand)
     db.commit()
     db.refresh(cand)
 
-    # Evaluate answers
-    evaluation_results = evaluation.evaluate_candidate_answers(
-        [answer.model_dump() for answer in candidate.answers]
-    )
-
-    # Persist each answer along with the evaluation
-    for ans_data, eval_data in zip(candidate.answers, evaluation_results):
+    # Save answers without evaluation initially
+    answers_data = []
+    for ans_data in candidate.answers:
+        # Get ideal answer for text questions
+        ideal_answer = None
+        if ans_data.type == 'text' and ans_data.id in ideal_answers:
+            ideal_answer = ideal_answers[ans_data.id]['ideal_answer']
+        
         answer_record = models.Answer(
             candidate_id=cand.id,
             question_id=ans_data.id,
@@ -88,12 +90,43 @@ def create_candidate(candidate: schemas.CandidateCreate, db: Session = Depends(g
             type=ans_data.type,
             selected=ans_data.selected,
             answer_text=ans_data.answer,
-            evaluation_score=eval_data['score'],
-            evaluation_feedback=eval_data['feedback'],
+            evaluation_status='pending',
+            ideal_answer=ideal_answer,
         )
         db.add(answer_record)
+        answers_data.append(ans_data.model_dump())
+    
     db.commit()
-    return {"id": cand.id}
+    
+    # Start background evaluation
+    background_tasks.start_background_evaluation(cand.id, answers_data)
+    
+    return schemas.SubmissionResponse(
+        id=cand.id,
+        message="Đơn ứng tuyển đã được gửi thành công! Hệ thống đang đánh giá câu trả lời của bạn.",
+        status="pending"
+    )
+
+
+@app.get("/candidates/{candidate_id}/status")
+def get_evaluation_status(candidate_id: int, db: Session = Depends(get_db)):
+    """
+    Get the evaluation status for a specific candidate submission.
+    """
+    candidate = db.query(models.Candidate).filter(models.Candidate.id == candidate_id).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    
+    return {
+        "id": candidate.id,
+        "status": candidate.evaluation_status,
+        "message": {
+            "pending": "Đang chờ đánh giá...",
+            "processing": "Đang đánh giá câu trả lời...",
+            "completed": "Đánh giá hoàn thành!",
+            "failed": "Có lỗi xảy ra trong quá trình đánh giá."
+        }.get(candidate.evaluation_status, "Trạng thái không xác định")
+    }
 
 
 @app.post("/employer/login")
