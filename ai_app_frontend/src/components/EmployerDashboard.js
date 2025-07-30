@@ -18,6 +18,9 @@ const CandidateCard = ({ candidate }) => {
     scores.reduce((sum, s) => sum + s, 0)
   ).toFixed(1) : null;
 
+  // Maximum possible score: 10 MC questions (1pt each) + 6 SA questions (2pts each) = 22
+  const maxScore = 22;
+
   return (
     <div className={`card${expanded ? ' expanded' : ''}`}>  {/* Card layout */}
       <div className="card-header" onClick={() => setExpanded((v) => !v)}>
@@ -25,7 +28,11 @@ const CandidateCard = ({ candidate }) => {
           <h3>{candidate.name}</h3>
           <p className="subtext">{candidate.phone}</p>
         </div>
-        {totalScore && <span className="score-chip">Total: {totalScore}</span>}
+        {totalScore && (
+          <span className="score-chip">
+            {totalScore}/{maxScore}
+          </span>
+        )}
       </div>
       {expanded && (
         <div className="card-body">

@@ -4,7 +4,7 @@
  * provided, it defaults to http://localhost:8000.
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 /**
  * Submit a candidate's application.  Expects an object containing name,
